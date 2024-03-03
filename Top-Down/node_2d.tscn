@@ -1,0 +1,113 @@
+[gd_scene load_steps=14 format=3 uid="uid://dp774obd8eiij"]
+
+[ext_resource type="Texture2D" uid="uid://ffowjrbr574s" path="res://pixil-frame-0.png" id="1_3af0t"]
+[ext_resource type="Script" path="res://arena.gd" id="1_wfhy5"]
+[ext_resource type="Script" path="res://TileMap.gd" id="2_vg78x"]
+[ext_resource type="Texture2D" uid="uid://c58fdd7gj7xh3" path="res://icon.svg" id="3_3qigu"]
+[ext_resource type="Script" path="res://Sprite2D.gd" id="3_uv5eb"]
+[ext_resource type="Texture2D" uid="uid://b1yxg7niot1el" path="res://char.png" id="5_nal2p"]
+[ext_resource type="Script" path="res://Camera.gd" id="5_vrlf7"]
+[ext_resource type="PackedScene" uid="uid://bdcctl65j61tr" path="res://fireball.tscn" id="8_ku8o1"]
+[ext_resource type="Script" path="res://ammo.gd" id="9_jmf7y"]
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_ewjjk"]
+texture = ExtResource("1_3af0t")
+texture_region_size = Vector2i(72, 72)
+0:0/next_alternative_id = 4
+0:0/0 = 0
+0:0/0/texture_origin = Vector2i(0, -18)
+0:0/1 = 1
+0:0/1/texture_origin = Vector2i(0, -18)
+0:0/1/modulate = Color(1, 0.494118, 1, 1)
+0:0/2 = 2
+0:0/2/texture_origin = Vector2i(0, -18)
+0:0/2/modulate = Color(0.109804, 1, 1, 1)
+0:0/3 = 3
+0:0/3/texture_origin = Vector2i(0, -20)
+0:0/3/modulate = Color(1, 0.666667, 0.227451, 1)
+
+[sub_resource type="TileSet" id="TileSet_hhah1"]
+tile_shape = 3
+tile_layout = 5
+tile_offset_axis = 1
+tile_size = Vector2i(72, 36)
+custom_data_layer_0/name = "clk"
+custom_data_layer_0/type = 1
+custom_data_layer_1/name = "hzd"
+custom_data_layer_1/type = 2
+custom_data_layer_2/name = "eff"
+custom_data_layer_2/type = 2
+sources/0 = SubResource("TileSetAtlasSource_ewjjk")
+
+[sub_resource type="GDScript" id="GDScript_vfnkd"]
+script/source = "extends CharacterBody2D
+
+
+const SPEED = 300.0
+const JUMP_VELOCITY = -400.0
+
+
+func _physics_process(delta):
+
+
+	# Get the input direction and handle the movement/deceleration.
+	# As good practice, you should replace UI actions with custom gameplay actions.
+	var direction = Input.get_axis(\"ui_left\", \"ui_right\")
+	if direction:
+		velocity.x = direction * SPEED
+	else:
+		velocity.x = move_toward(velocity.x, 0, SPEED)
+
+	move_and_slide()
+"
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_ruw5g"]
+
+[node name="master" type="Node"]
+
+[node name="scene" type="Node2D" parent="."]
+
+[node name="fireball" parent="scene" instance=ExtResource("8_ku8o1")]
+
+[node name="arena" type="Node" parent="scene"]
+script = ExtResource("1_wfhy5")
+
+[node name="display" type="TileMap" parent="scene/arena"]
+tile_set = SubResource("TileSet_hhah1")
+rendering_quadrant_size = 32
+format = 2
+script = ExtResource("2_vg78x")
+
+[node name="char" type="Sprite2D" parent="scene/arena/display"]
+texture = ExtResource("5_nal2p")
+offset = Vector2(0, -36)
+
+[node name="cam" type="Camera2D" parent="scene/arena/display"]
+position_smoothing_enabled = true
+script = ExtResource("5_vrlf7")
+
+[node name="ammo" type="Label" parent="scene/arena/display/cam"]
+z_index = 1
+offset_left = -523.0
+offset_top = -288.0
+offset_right = -483.0
+offset_bottom = -265.0
+scale = Vector2(1, 2.16)
+uppercase = true
+script = ExtResource("9_jmf7y")
+
+[node name="CharacterBody2D" type="CharacterBody2D" parent="scene/arena"]
+script = SubResource("GDScript_vfnkd")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="scene/arena/CharacterBody2D"]
+shape = SubResource("CircleShape2D_ruw5g")
+
+[node name="Sprite2D" type="Sprite2D" parent="scene/arena/CharacterBody2D"]
+visible = false
+position = Vector2(0, 1)
+texture = ExtResource("3_3qigu")
+script = ExtResource("3_uv5eb")
+
+[connection signal="fire" from="scene/arena" to="scene/arena/display/cam/ammo" method="_on_arena_fire"]
+[connection signal="update" from="scene/arena" to="scene/arena/display" method="_on_arena_update"]
+[connection signal="select" from="scene/arena/display" to="scene/arena" method="_on_display_select"]
